@@ -24,7 +24,9 @@ logPos = np.zeros(sz)
 logPos[0] = q0
 logVel = np.zeros(sz)
 # logVel[0] = 0
-eefLinkIdx = 3
+
+jointIndices = [1,3]
+eefLinkIdx = 4
 
 physicsClient = p.connect(p.GUI) # or p.DIRECT for non-graphical version
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -33,9 +35,9 @@ planeId = p.loadURDF("plane.urdf")
 boxId = p.loadURDF("./simple.urdf", useFixedBase=True)
 
 # get rid of all the default damping forces
-p.changeDynamics(boxId, 1, linearDamping=0, angularDamping=0)
-p.changeDynamics(boxId, 2, linearDamping=0, angularDamping=0)
-p.changeDynamics(boxId, 3, linearDamping=0, angularDamping=0)
+# p.changeDynamics(boxId, 1, linearDamping=0, angularDamping=0)
+# p.changeDynamics(boxId, 2, linearDamping=0, angularDamping=0)
+# p.changeDynamics(boxId, 3, linearDamping=0, angularDamping=0)
 
 numJoints = p.getNumJoints(boxId)
 for idx in range(numJoints):
@@ -43,13 +45,12 @@ for idx in range(numJoints):
 
 # go to the starting position
 # p.setJointMotorControl2(bodyIndex=boxId, jointIndex=1, targetPosition=q0, controlMode=p.POSITION_CONTROL)
-p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=[1,2], targetPositions=[q0,q0], controlMode=p.POSITION_CONTROL)
+p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetPositions=[q0,q0], controlMode=p.POSITION_CONTROL)
 for _ in range(1000):
     p.stepSimulation()
 
 # turn off the motor for the free motion
-# p.setJointMotorControl2(bodyIndex=boxId, jointIndex=1, targetVelocity=0, controlMode=p.VELOCITY_CONTROL, force=0)
-p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=[1,2], targetVelocities=[0,0], controlMode=p.VELOCITY_CONTROL, forces=[0,0])
+p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetVelocities=[0,0], controlMode=p.VELOCITY_CONTROL, forces=[0,0])
 
 # velocity and torque controllers
 # p.setJointMotorControl2(bodyIndex=boxId, jointIndex=1, targetVelocity=0.0, controlMode=p.VELOCITY_CONTROL)

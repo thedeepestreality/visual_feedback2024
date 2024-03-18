@@ -40,6 +40,21 @@
         </inertial>
     </link>
 
+    <link name="link_eef1">
+        <visual>
+            <geometry>
+                <sphere radius="0.05"/>   
+            </geometry>
+            <origin xyz="0 0 0.05" rpy="0 0 0" />
+            <material name="black"/>
+        </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="1"/>
+            <inertia ixx="0"  ixy="0"  ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
     <link name="link_2">
         <visual>
             <geometry>
@@ -54,7 +69,7 @@
         </inertial>
     </link>
 
-    <link name="link_eef">
+    <link name="link_eef2">
         <visual>
             <geometry>
                 <sphere radius="0.05"/>   
@@ -84,18 +99,24 @@
         <axis xyz="0 1 0"/>
     </joint>
 
-    <joint name="joint_2" type="revolute">
+    <joint name="joint_eef1" type="fixed">
         <parent link="link_1"/>
+        <child link="link_eef1"/>     
+        <origin xyz="0 0 0.5" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="joint_2" type="revolute">
+        <parent link="link_eef1"/>
         <child link="link_2"/>
-        <origin xyz="0.0 0 0.5" rpy="0 0 0"/>
+        <origin xyz="0.0 0 0" rpy="0 0 0"/>
         <limit effort="0" velocity="0"/>
         <dynamics damping="1" friction="0"/>
         <axis xyz="0 1 0"/>
     </joint>
 
-    <joint name="joint_eef" type="fixed">
+    <joint name="joint_eef2" type="fixed">
         <parent link="link_2"/>
-        <child link="link_eef"/>     
+        <child link="link_eef2"/>     
         <origin xyz="0 0 0.5" rpy="0 0 0"/>
     </joint>
 </robot>
