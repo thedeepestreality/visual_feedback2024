@@ -21,7 +21,7 @@ zd = 1.0
 L = 0.5
 Z0 = 1.5
 pos = q0
-maxTime = 5
+maxTime = 50
 logTime = np.arange(0.0, maxTime, dt)
 sz = logTime.size
 logPos = np.zeros(sz)
@@ -105,7 +105,7 @@ for t in logTime[1:]:
                   [L*np.sin(th1)+L*np.sin(th1+th2), L*np.sin(th1+th2)]])
     dth = np.array([[dth1],[dth2]])
     
-    w = np.linalg.inv(J) @ -np.array([[xSim2-xd],[zSim2-zd]])
+    w = 10*np.linalg.inv(J) @ -np.array([[xSim2-xd],[zSim2-zd]])
     # print(w)
     p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetVelocities=[w[0,0],w[1,0]], controlMode=p.VELOCITY_CONTROL)
 
