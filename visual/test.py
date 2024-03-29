@@ -4,8 +4,17 @@ import numpy as np
 from camera import Camera
 import cv2
 
+def computeInterMatrix(Z, sd0):
+    L = np.zeros((8,6))
+    for idx in range(4):
+        x = sd0[2*idx, 0]
+        y = sd0[2*idx+1, 0]
+        L[2*idx] = np.array([-1/Z,0,x/Z,x*y,-(1+x**2),y])
+        L[2*idx+1] = np.array([0,-1/Z,y/Z,1+y**2,-x*y,-x])
+    return L
+
 dt = 1/240
-T = 1
+T = 0.4
 t = 0
 
 physicsClient = p.connect(p.GUI)#or p.DIRECT for non-graphical version
@@ -35,17 +44,11 @@ sd0 = np.array([(s-125)/125 for s in sd0])
 sd = np.reshape(np.array(corners[0][0]),(8,1)).astype(int)
 
 Z = 2.0
-Ld0 = np.array([[-1/Z, 0,sd0[0,0]/Z, sd0[1,0]],
-                [0, -1/Z,sd0[1,0]/Z,-sd0[0,0]],
-                [-1/Z, 0,sd0[2,0]/Z, sd0[3,0]],
-                [0, -1/Z,sd0[3,0]/Z,-sd0[2,0]],
-                [-1/Z, 0,sd0[4,0]/Z, sd0[5,0]],
-                [0, -1/Z,sd0[5,0]/Z,-sd0[4,0]],
-                [-1/Z, 0,sd0[6,0]/Z, sd0[7,0]],
-                [0, -1/Z,sd0[7,0]/Z,-sd0[6,0]]])
+Ld0 = computeInterMatrix(Z, sd0)
 
 # pos = np.array([1.0, 0.0, 3.0])
-pos = np.array([0.5, 0.5, 3.0])
+# pos = np.array([0.5, 0.5, 3.0])
+pos = np.array([0.5, 0.5, 4.0])
 
 al = np.pi/3
 # al = 0
@@ -75,26 +78,20 @@ while t <= T:
     s0 = np.array([(ss-125)/125 for ss in s0])
 
     Z = pos[2] - 1.0
-    L0 = np.array([ [-1/Z, 0,s0[0,0]/Z, s0[1,0]],
-                    [0, -1/Z,s0[1,0]/Z,-s0[0,0]],
-                    [-1/Z, 0,s0[2,0]/Z, s0[3,0]],
-                    [0, -1/Z,s0[3,0]/Z,-s0[2,0]],
-                    [-1/Z, 0,s0[4,0]/Z, s0[5,0]],
-                    [0, -1/Z,s0[5,0]/Z,-s0[4,0]],
-                    [-1/Z, 0,s0[6,0]/Z, s0[7,0]],
-                    [0, -1/Z,s0[7,0]/Z,-s0[6,0]]])
+    L0 = computeInterMatrix(Z, s0)
     
     # L0 = Ld0
-    L0 = (L0+Ld0)/2
+    # L0 = (L0+Ld0)/2
     
     L0T = np.linalg.inv(L0.T@L0)@L0.T
     e = s0 - sd0
-    w = -L0T @ e
+    coef = 1/10
+    w = -coef * L0T @ e
 
-    # pos[1] += -10*w[0,0]*dt
-    # pos[0] += -10*w[1,0]*dt
-    pos[2] += -w[2,0]/10
-    al += -w[3,0]/10
+    pos[1] -= w[0,0]
+    pos[0] -= w[1,0]
+    pos[2] -= w[2,0]
+    al -= w[5,0]
     upVector = [np.cos(al), np.sin(al), 0]
     camera.set_new_position(pos, upVector)
 
