@@ -14,8 +14,9 @@ class Camera:
             cameraTargetPosition = cameraEyePosition + self.targetVec,
             cameraUpVector=self.upVec
         )
+        self.fov = 45
         self.projectionMatrix = pb.computeProjectionMatrixFOV(
-            fov=60,
+            fov=self.fov,
             aspect=1.0,
             nearVal=0.1,
             farVal=100
@@ -24,8 +25,11 @@ class Camera:
             **self.size,
             'viewMatrix': self.viewMatrix,
             'projectionMatrix': self.projectionMatrix,
-            # 'renderer': pb.ER_TINY_RENDERER
-            'renderer': pb.ER_BULLET_HARDWARE_OPENGL
+            'flags': pb.ER_NO_SEGMENTATION_MASK,
+            # 'flags': pb.ER_USE_PROJECTIVE_TEXTURE,
+            # 'lightAmbientCoeff': 1.0,
+            'renderer': pb.ER_TINY_RENDERER,
+            # 'renderer': pb.ER_BULLET_HARDWARE_OPENGL
         }
 
     def set_new_height(self, h):
@@ -41,18 +45,14 @@ class Camera:
             **self.size,
             'viewMatrix': self.viewMatrix,
             'projectionMatrix': self.projectionMatrix,
-            # 'renderer': pb.ER_TINY_RENDERER,
-            'renderer': pb.ER_BULLET_HARDWARE_OPENGL
+            # 'lightAmbientCoeff': 1.0,
+            'flags': pb.ER_NO_SEGMENTATION_MASK,
+            # 'flags': pb.ER_USE_PROJECTIVE_TEXTURE,
+            'renderer': pb.ER_TINY_RENDERER,
+            # 'renderer': pb.ER_BULLET_HARDWARE_OPENGL
         }
 
     def get_frame(self):
-        """
-        returns RGBA array of size (x, y, 4)
-        """
-        return pb.getCameraImage(**self.cam_image_kwargs)[2]
-    
-    def get_depth(self):
-        """
-        returns RGBA array of size (x, y, 4)
-        """
-        return pb.getCameraImage(**self.cam_image_kwargs)[3]
+        pbImg = pb.getCameraImage(**self.cam_image_kwargs)[2]
+        cvImg = pbImg[:,:,[2,1,0]]
+        return cvImg
