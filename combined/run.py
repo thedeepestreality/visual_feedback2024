@@ -1,3 +1,4 @@
+# Импорт библиотек. Задание констант
 import pybullet as p
 import numpy as np
 import time
@@ -15,11 +16,14 @@ MARKER_CORNERS_WORLD = np.array(
         [-MARKER_LENGTH/2,-MARKER_LENGTH/2,0.0,1]
     ]
 )
+
+# Инициализация детектора ARUCO и камеры
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
 parameters = cv2.aruco.DetectorParameters()
 parameters.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
 detector = cv2.aruco.ArucoDetector(dictionary, parameters)
 
+# Определение вспомогательных функций
 def computeInterMatrix(Z, sd0):
     L = np.zeros((8,3))
     for idx in range(4):
@@ -39,9 +43,10 @@ def updateCamPos(cam):
     rotMat = np.reshape(np.array(rotMat),(3,3))
     camera.set_new_position(xyz, rotMat)
     
-
+# Создание объекта Camera
 camera = Camera(imgSize = [IMG_SIDE, IMG_SIDE])
 
+# Инициализация параметров симуляции и подключение к pybullet
 dt = 1/240 # pybullet simulation step
 q0 = 0.5  # starting position (radian)
 qd = 0.5
@@ -71,16 +76,19 @@ p.resetDebugVisualizerCamera(
     cameraTargetPosition=[0.5, 0.5, 0.6]
 )
 p.setGravity(0,0,-10)
-boxId = p.loadURDF("./simple.urdf.xml", useFixedBase=True)
+
+#Загрузка моделей и настройка симуляции:
+boxId = p.loadURDF("combined/simple.urdf.xml", useFixedBase=True)
 
 # add aruco cube and aruco texture
-c = p.loadURDF('aruco.urdf', (0.5, 0.5, 0.0), useFixedBase=True)
-x = p.loadTexture('aruco_cube.png')
+c = p.loadURDF('combined/aruco.urdf', (0.5, 0.5, 0.0), useFixedBase=True)
+x = p.loadTexture('combined/aruco_cube.png')
 p.changeVisualShape(c, -1, textureUniqueId=x)
 
 numJoints = p.getNumJoints(boxId)
 for idx in range(numJoints):
     print(f"{idx} {p.getJointInfo(boxId, idx)[1]} {p.getJointInfo(boxId, idx)[12]}")
+
 
 print(p.isNumpyEnabled())
 
@@ -104,6 +112,8 @@ for _ in range(100):
 idx = 1
 camCount = 0
 w = np.zeros((3,1))
+
+# Цикл симуляции и обработки изображений
 for t in logTime[1:]:
     p.stepSimulation()
 
@@ -144,4 +154,5 @@ for t in logTime[1:]:
     p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetVelocities=dq, controlMode=p.VELOCITY_CONTROL)
     #time.sleep(0.01)
     
+# Завершение симуляции и отключение от pybullet
 p.disconnect()
