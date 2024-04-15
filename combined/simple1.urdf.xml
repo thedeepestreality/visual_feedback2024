@@ -66,7 +66,7 @@
     <link name="link_2">
         <visual>
             <geometry>
-                <cylinder radius="0.01" length="0.5"/>   
+                <cylinder radius="0.01" length="0.4"/>   
             </geometry>
             <origin xyz="0.25 0 0" rpy="0 1.5708 0" />
             <material name="gray"/>
