@@ -65,9 +65,8 @@ xd = 0.5
 yd = 0.5
 
 L = 0.5
-Z0 = 0.3
 pos = q0
-maxTime = 20 # 10
+maxTime = 10
 logTime = np.arange(0.0, maxTime, dt)
 sz = logTime.size
 logPos = np.zeros(sz)
@@ -88,11 +87,11 @@ p.resetDebugVisualizerCamera(
 p.setGravity(0,0,-10)
 
 #Загрузка моделей и настройка симуляции:
-boxId = p.loadURDF("combined/simple1.urdf.xml", useFixedBase=True)
+boxId = p.loadURDF("simple1.urdf.xml", useFixedBase=True)
 
 # add aruco cube and aruco texture
-c = p.loadURDF('combined/aruco.urdf', (0.5, 0.5, 0.0), useFixedBase=True)
-x = p.loadTexture('combined/aruco_cube.png')
+c = p.loadURDF('aruco.urdf', (0.5, 0.5, 0.0), useFixedBase=True)
+x = p.loadTexture('aruco_cube.png')
 p.changeVisualShape(c, -1, textureUniqueId=x)
 
 numJoints = p.getNumJoints(boxId)
@@ -110,7 +109,6 @@ for _ in range(100):
 # while True:
 #     p.stepSimulation()
 
-
 updateCamPos(camera)
 img = camera.get_frame()
 corners, markerIds, rejectedCandidates = detector.detectMarkers(img)
@@ -124,7 +122,8 @@ else:
 sd = np.reshape(np.array(corners[0][0]),(8,1)).astype(int)
 
 # go to the starting position
-p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetPositions=[0.1, 1.4708, 0.15, 0.1], controlMode=p.POSITION_CONTROL)  # [0.1, 1.4708, 1, 0.1]
+# p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetPositions=[0.1, 1.4708, 0.15, 0.1], controlMode=p.POSITION_CONTROL)  # [0.1, 1.4708, 1, 0.1]
+p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetPositions=[0.0, 1.5708, 0.01, 0.5], controlMode=p.POSITION_CONTROL)  # [0.1, 1.4708, 1, 0.1]
 for _ in range(100):
     p.stepSimulation()
 
@@ -160,13 +159,13 @@ for t in logTime[1:]:
     if (camCount == 5):
         camCount = 0
         updateCamPos(camera)
-        camera.get_frame()
         img = camera.get_frame()
         corners, markerIds, rejectedCandidates = detector.detectMarkers(img)
         if corners is not None and len(corners) > 0 and len(corners[0]) > 0:
             s = corners[0][0,0]
             s0 = np.reshape(np.array(corners[0][0]),(8,1))  
             s0 = np.array([(ss-IMG_HALF)/IMG_HALF for ss in s0])
+            Z0 = camera.eyePosition[2]
             L0 = computeInterMatrix2(Z0, s0) 
             L0T = np.linalg.inv(L0.T@L0)@L0.T
             # print("L0", L0)
@@ -197,12 +196,13 @@ for t in logTime[1:]:
     # ])
 
     J = np.block([
-        [np.array(linJac)[:3,:3], np.zeros((3,1))], 
+        [np.array(linJac)], 
         [np.array(angJac)[2,:]]  
     ])
     # print("J", J)
     
     dq = (np.linalg.inv(J) @ w).flatten()[[1, 0, 2, 3]] # dq = (np.linalg.inv(J) @ w).flatten()[[1,0,2]]
+    dq[2] = -dq[2]
     dq[3] = -dq[3]
 
     # Убеждаемся, что dq содержит четыре компоненты
