@@ -24,22 +24,22 @@ parameters.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
 detector = cv2.aruco.ArucoDetector(dictionary, parameters)
 
 # Определение вспомогательных функций
-def computeInterMatrix(Z, sd0):
-    L = np.zeros((8,3))
-    for idx in range(4):
-        x = sd0[2*idx, 0]
-        y = sd0[2*idx+1, 0]
-        L[2*idx] = np.array([-1/Z,0,y])
-        L[2*idx+1] = np.array([0,-1/Z,-x])
-    return L
+# def computeInterMatrix(Z, sd0):
+#     L = np.zeros((8,3))
+#     for idx in range(4):
+#         x = sd0[2*idx, 0]
+#         y = sd0[2*idx+1, 0]
+#         L[2*idx] = np.array([-1/Z,0,y])
+#         L[2*idx+1] = np.array([0,-1/Z,-x])
+#     return L
 
 def computeInterMatrix2(Z, sd0):
     L = np.zeros((8,4))
     for idx in range(4):
         x = sd0[2*idx, 0]
         y = sd0[2*idx+1, 0]
-        L[2*idx] = np.array([-1/Z, 0, y, 0])
-        L[2*idx+1] = np.array([0, -1/Z, 0, -x])
+        L[2*idx] = np.array([-1/Z, 0, x/Z, y])
+        L[2*idx+1] = np.array([0, -1/Z, y/Z, -x])
     return L
 
 
@@ -130,7 +130,7 @@ for _ in range(100):
 
 idx = 1
 camCount = 0
-w = np.zeros((4,1))  # (4,1)
+w = np.zeros((4,1)) 
 
 # Создаем списки для данных
 positions = []
@@ -182,7 +182,7 @@ for t in logTime[1:]:
     jVel = [state[1] for state in jStates]
     (linJac,angJac) = p.calculateJacobian(
         bodyUniqueId = boxId, 
-        linkIndex = eefLinkIdx, # 6,
+        linkIndex = eefLinkIdx, 
         localPosition = [0,0,0],
         objPositions = jPos,
         objVelocities = [0,0,0,0],
@@ -270,6 +270,7 @@ orientations = np.array(orientations)
 # Построение графиков для угла
 plt.figure(figsize=(10, 6))
 plt.plot(logTime[1:], orientations[:, 0], label='Roll')
+# print(orientations[:, 0])
 plt.plot(logTime[1:], orientations[:, 1], label='Pitch')
 plt.plot(logTime[1:], orientations[:, 2], label='Yaw')
 plt.xlabel('Time (s)')
