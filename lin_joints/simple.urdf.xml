@@ -1,0 +1,95 @@
+<robot name="pendulum">
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="gray">
+        <color rgba="0.8 0.8 0.8 1"/>
+    </material>
+
+    <material name="green">
+        <color rgba="0.2 0.8 0.2 0.8"/>
+    </material>
+
+    <link name="world"/>
+    <link name="base">
+        <visual>
+            <geometry>
+                <sphere radius="0.1"/>   
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <inertial>
+            <mass value="0"/>
+            <inertia ixx="0"  ixy="0"  ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="link_x"/>
+
+    <link name="link_y"/>
+
+    <link name="link_z"/>
+
+    <link name="link_z_rot"/>
+
+    <link name="link_eef">
+        <visual>
+            <geometry>
+                <box size="0.1 0.05 0.02"/>   
+            </geometry>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <material name="green"/>
+        </visual>
+    </link>
+
+    <joint name="world_to_base" type="fixed">
+        <parent link="world"/>
+        <child link="base"/>     
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="joint_x" type="prismatic">
+        <parent link="base"/>
+        <child link="link_x"/>
+        <origin xyz="0.0 0 0" rpy="0 0 0"/>
+        <limit effort="0" velocity="0"/>
+        <axis xyz="1 0 0"/>
+    </joint>
+
+    <joint name="joint_y" type="prismatic">
+        <parent link="link_x"/>
+        <child link="link_y"/>
+        <origin xyz="0.0 0 0" rpy="0 0 0"/>
+        <limit effort="0" velocity="0"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <joint name="joint_z" type="prismatic">
+        <parent link="link_y"/>
+        <child link="link_z"/>
+        <origin xyz="0.0 0 0" rpy="0 0 0"/>
+        <limit effort="0" velocity="0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="joint_z_rot" type="revolute">
+        <parent link="link_z"/>
+        <child link="link_z_rot"/>
+        <origin xyz="0.0 0 0" rpy="0 0 0"/>
+        <limit effort="0" velocity="0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="xyz_to_eef" type="fixed">
+        <parent link="link_z_rot"/>
+        <child link="link_eef"/>     
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+    </joint>
+
+</robot>
