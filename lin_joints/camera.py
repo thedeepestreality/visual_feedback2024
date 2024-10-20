@@ -46,7 +46,13 @@ class Camera:
             'renderer': pb.ER_TINY_RENDERER
         }
 
+    # def get_frame(self):
+    #     pbImg = pb.getCameraImage(**self.cam_image_kwargs)[2]
+    #     cvImg = pbImg[:,:,[2,1,0]]
+    #     return cvImg
+
     def get_frame(self):
-        pbImg = pb.getCameraImage(**self.cam_image_kwargs)[2]
+        pbImg = pb.getCameraImage(**self.cam_image_kwargs)
+        pbImg = np.resize(np.asarray(pbImg[2],dtype=np.uint8),(pbImg[0],pbImg[1],4))
         cvImg = pbImg[:,:,[2,1,0]]
         return cvImg

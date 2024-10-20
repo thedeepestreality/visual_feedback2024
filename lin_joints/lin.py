@@ -29,15 +29,22 @@ detector = cv2.aruco.ArucoDetector(dictionary, parameters)
 #         L[2*idx+1] = np.array([0,-1/Z,-x])
 #     return L
 
-def computeInterMatrix(z, sd0):
+def computeInterMatrix(Z, sd0):
     L = np.zeros((8,2))
     for idx in range(4):
         x = sd0[2*idx, 0]
         y = sd0[2*idx+1, 0]
-        Z = z[idx]
         L[2*idx] = np.array([x/Z,y])
         L[2*idx+1] = np.array([y/Z,-x])
     return L
+
+def img_rp(t, s, w):
+    Z0 = s[-1]
+    L = computeInterMatrix(Z0, s[:-1,0])
+    return L @ w
+
+def prediction(s0, w):
+    
 
 def updateCamPos(cam, linkIdx):
     linkState = p.getLinkState(boxId, linkIndex=linkIdx)
@@ -53,8 +60,8 @@ def updateCamPos(cam, linkIdx):
 camera = Camera(imgSize = [IMG_SIDE, IMG_SIDE])
 
 dt = 1/240 # pybullet simulation step
-Z0 = 0.3
-maxTime = 1
+Z0 = 0.5
+maxTime = 5
 logTime = np.arange(0.0, maxTime, dt)
 sz = logTime.size
 
@@ -93,6 +100,10 @@ sd0 = np.reshape(np.array(corners[0][0]),(8,1))
 sd0 = np.array([(s-IMG_HALF)/IMG_HALF for s in sd0])
 sd = np.reshape(np.array(corners[0][0]),(8,1)).astype(int)
 
+# cv2.imshow("desired",img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
 # go to the starting position
 p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=jointIndices, targetPositions=[0.5,0.5,0.5,0.5], controlMode=p.POSITION_CONTROL)
 for _ in range(100):
@@ -104,7 +115,51 @@ for _ in range(100):
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
+linkState = p.getLinkState(boxId, linkIndex=eefLinkIdx)
+# pos
+Z0 = linkState[0][2]
+
+camCount = 0
+w = np.zeros((2,1))
+logZ = [Z0]
+start = time.time()
 for t in logTime[1:]:
     p.stepSimulation()
-    time.sleep(dt)
+
+    camCount += 1
+    if (camCount == 10):
+        camCount = 0
+        updateCamPos(camera, eefLinkIdx)
+        camera.get_frame()
+        img = camera.get_frame()
+        corners, markerIds, rejectedCandidates = detector.detectMarkers(img)
+        s = corners[0][0,0]
+        s0 = np.reshape(np.array(corners[0][0]),(8,1))
+        s0 = np.array([(ss-IMG_HALF)/IMG_HALF for ss in s0])
+        # logImg = np.append(logImg, s0.T)
+        # logImg = np.vstack([logImg, s0.flatten()])
+        linkState = p.getLinkState(boxId, linkIndex=eefLinkIdx)
+        # pos
+        Z0 = linkState[0][2]
+        L0 = computeInterMatrix(Z0, s0)
+        L0T = np.linalg.inv(L0.T@L0)@L0.T
+        e = s0 - sd0
+        coef = 2#1/2
+        w = coef * L0T @ e
+
+    p.setJointMotorControlArray(bodyIndex=boxId, jointIndices=[3,4], targetVelocities=w, controlMode=p.VELOCITY_CONTROL)
+    linkState = p.getLinkState(boxId, linkIndex=eefLinkIdx)
+    # pos
+    xyz = linkState[0]
+    # orientation
+    quat = linkState[1]
+    logZ.append(xyz[2])
+
+print(time.time()-start)
+    # time.sleep(dt)
 p.disconnect()
+
+import matplotlib.pyplot as plt
+plt.plot(logTime, logZ)
+
+plt.show()
